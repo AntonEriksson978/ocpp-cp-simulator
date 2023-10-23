@@ -389,16 +389,20 @@ class ChargePoint {
     //
     startTransaction(tagId, connectorId = 1, reservationId = 0) {
         this.setStatus(CP_INTRANSACTION);
-        var mv = this.meterValue();
         var id = generateId();
+
+        // Always start on metervalue 0.
+        $("#metervalue").val(0); 
+        _cp.setMeterValue(0);
+
         var strtT = JSON.stringify([2, id, START_TRANSACTION, {
             "connectorId": connectorId,
             "idTag": tagId,
-            "meterStart": mv,
+            "meterStart": 0,
             "timestamp": luxon.DateTime.utc().toISO(),
             "reservationId": reservationId
         }]);
-        this.logMsg("Starting Transaction for tag " + tagId + " (connector:" + connectorId + ", meter value=" + mv + ")");
+        this.logMsg("Starting Transaction for tag " + tagId + " (connector:" + connectorId + ", meter value=" + 0 + ")");
         this.wsSendData(strtT);
         this.setConnectorStatus(connectorId, CONN_CHARGING, true);
         this.setLastAction(START_TRANSACTION);
@@ -421,13 +425,42 @@ class ChargePoint {
     stopTransactionWithId(transactionId, tagId = "DEADBEEF") {
         this.setLastAction(STOP_TRANSACTION);
         this.setStatus(CP_AUTHORIZED);
-        var mv = this.meterValue();
-        this.logMsg("Stopping Transaction with id " + transactionId + " (meterValue=" + mv + ")");
+        var meterValue = this.meterValue();
+        this.logMsg("Stopping Transaction with id " + transactionId + " (meterValue (Wh) =" + meterValue + ")");
         var id = generateId();
         var stopParams = {
             "transactionId": transactionId,
             "timestamp": luxon.DateTime.utc().toISO(),
-            "meterStop": mv
+            "meterStop": meterValue,
+            "reason": "Local",
+            "transactionData": [
+                {
+                    "sampledValue": [
+                        {
+                            "value": "0", // Hardcoded that transactions start at 0 Wh.
+                            "context": "Transaction.Begin",
+                            "format": "Raw",
+                            "measurand": "Energy.Active.Import.Register",
+                            "location": "Outlet",
+                            "unit": "Wh"
+                        }
+                    ],
+                    "timestamp": luxon.DateTime.utc().toISO(),
+                },
+                {
+                    "sampledValue": [
+                        {
+                            "value": String(meterValue), 
+                            "context": "Transaction.End",
+                            "format": "Raw",
+                            "measurand": "Energy.Active.Import.Register",
+                            "location": "Outlet",
+                            "unit": "Wh"
+                        }
+                    ],
+                    "timestamp": luxon.DateTime.utc().toISO(),
+                },
+            ]
         };
         if (!isEmpty(tagId)) {
             stopParams["idTag"] = tagId;
@@ -679,16 +712,16 @@ class ChargePoint {
                             "value": meter,
                             "context": "Sample.Periodic",
                             "format": "Raw",
-                            "measurand": "Current.Offered",
+                            "measurand": "Energy.Active.Import.Register",
                             "location": "Outlet",
-                            "unit": "A"
+                            "unit": "Wh"
                         }
                     ],
                     "timestamp": luxon.DateTime.utc().toISO(),
                 }]
             }
         ]);
-        this.logMsg("Send Meter Values: " + meter + " (connector " + connectorId + ")");
+        this.logMsg("Send Meter Values (Wh): " + meter + " (connector " + connectorId + ")");
         this.wsSendData(mvreq);
     }
 
@@ -914,9 +947,9 @@ $(document).ready(function () {
     $('#WSURL').val(getKey(WSURL))
     $('#CPID').val(getKey(CPID))
     $('#TAG').val(getKey(TAGID))
-    $("#metervalue").val(_cp.meterValue());
-    availabilityChangeCb(0, _cp.availability(0));
-    availabilityChangeCb(1, _cp.availability(1));
+    $("#metervalue").val(0);
+    // availabilityChangeCb(0, _cp.availability(0));
+    // availabilityChangeCb(1, _cp.availability(1));
 
     // Define settings call back
     $('#cpparams').submit(function (e) {
@@ -941,12 +974,14 @@ $(document).ready(function () {
     });
 
     $('#start').click(function () {
-        _cp.setMeterValue($("#metervalue").val(), false);
+        const meter = parseInt($("#metervalue").val());
+        _cp.setMeterValue(meter * 1000, false);
         _cp.startTransaction($("#TAG").val());
     });
 
     $('#stop').click(function () {
-        _cp.setMeterValue($("#metervalue").val(), false);
+        const meter = parseInt($("#metervalue").val());
+        _cp.setMeterValue(meter * 1000, false);
         _cp.stopTransaction($("#TAG").val());
     });
 
@@ -955,10 +990,12 @@ $(document).ready(function () {
     });
 
     $("#mvplus").click(function () {
-        var meter = $("#metervalue").val();
-        meter = parseInt(meter) + 1;
-        $("#metervalue").val(meter);
+        // Set chargepoint metervalues
+        const meter = parseInt($("#metervalue").val()) + 1;
         _cp.setMeterValue(meter * 1000, false);
+
+        // Increment metervalue input box
+        $("#metervalue").val(meter);
     });
 
 
@@ -970,16 +1007,19 @@ $(document).ready(function () {
         _cp.setConnectorStatus(0, $("#STATUS_CON0").val(), false);
     });
     $('#CP1_STATUS').change(function () {
-        _cp.setConnectorStatus(1, $("#STATUS_CON1").val(), false);
+        const value = document.getElementById("STATUS_CON1").value;
+        _cp.setConnectorStatus(1, value, false);
     });
     $('#status0').click(function () {
         _cp.setConnectorStatus(0, $("#STATUS_CON0").val(), true);
     });
     $('#status1').click(function () {
-        _cp.setConnectorStatus(1, $("#STATUS_CON1").val(), true);
+        const value = document.getElementById("STATUS_CON1").value;
+        _cp.setConnectorStatus(1, value, true);
     });
     $('#REMOTE_START_DELAY').change(function () {
-        _cp._remoteStartDelaySeconds = $("#REMOTE_START_DELAY").val();
+        const value = document.getElementById("REMOTE_START_DELAY").value;
+        _cp._remoteStartDelaySeconds = value;
     });
 
     $('#data_transfer').click(function () {

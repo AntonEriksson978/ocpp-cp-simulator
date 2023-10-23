@@ -44,64 +44,13 @@
         </ul>
 
         <div class="tab-content">
-            <div class="tab-pane mt-4" id="tabcpparams">
-                <form id="cpparams">
-                    <div class="form-group">
-                        <label for="WSURL">OCPP Server</label>
-                        <input type="text" class="form-control" id="WSURL" name="WSURL" aria-describedby="urlHelp"
-                            placeholder="ws://localhost:8080/steve/websocket/CentralSystemService/">
-                        <small id="urlHelp" class="form-text text-muted">The base URL of the OCPP Server (without the
-                            ChargePoint ID)</small>
-                    </div>
-                    <div class="form-group">
-                        <label for="CPID">ChargePoint ID</label>
-                        <input type="text" class="form-control" id="CPID" name="CPID" placeholder="CP001"
-                            style="max-width: 20ch">
-                    </div>
-                    <div class="form-group">
-                        <label for="OCPP">OCPP Version</label>
-                        <select id="OCPP" class="form-control" style="max-width: 20ch">
-                            <option value="">OCPP-1.6J</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="TAG">RFID Tag</label>
-                        <input type="text" class="form-control" id="TAG" name="TAG" aria-describedby="TAGHelp"
-                            placeholder="DEADBEEF" style="max-width: 20ch">
-                        <small id="TAGHelp" class="form-text text-muted">The ID of the simulated RFID tag</small>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                </form>
-            </div>
-            <div class="tab-pane mt-4" id="tabremote">
-
-                <form id="remote-form">
-                    <div class="form-group">
-                        <label for="REMOTE_START_STOP_RESPONSE">Remote start/stop response:</label>
-                        <br>
-                        <small>Should the CP respond with "Accepted" or "Rejected" upon Remote start or stop requests from CPMS?</small>
-                        <select id="REMOTE_START_STOP_RESPONSE" class="form-control"
-                            style="max-width: 16ch; margin-right:1ch;">
-                            <option selected value="Accepted">Accepted</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="REMOTE_START_DELAY">Remote start delay (seconds):</label>
-                        <br>
-                        <small>Simulate a delay before the charging session is started</small>
-                        <input class="form-control" style="width:161px;" type="number" min="0" value="0"
-                            id="REMOTE_START_DELAY" />
-                    </div>
-                </form>
-            </div>
             <div class="tab-pane mt-4" id="tabcon1">
                 <form id="con1">
                     <div class="form-group">
                         <label for="AVAILABILITY_CON1">Connector Availability:</label>
                         <select id="AVAILABILITY_CON1" class="form-control" style="max-width: 16ch; margin-right:1ch;">
-                            <option selected value="Operative">Operative</option>
-                            <option disabled value="Inoperative">Inoperative</option>
+                            <option value="Operative">Operative</option>
+                            <option value="Inoperative">Inoperative</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -120,6 +69,28 @@
                             </select>
                             <button id="status1" type="button" class="btn btn-primary">Status Notification</button>
                         </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane mt-4" id="tabremote">
+                <form id="remote-form">
+                    <div class="form-group">
+                        <label for="REMOTE_START_STOP_RESPONSE">Remote start/stop response:</label>
+                        <br>
+                        <small>Should the CP respond with "Accepted" or "Rejected" upon Remote start or stop requests
+                            from CPMS?</small>
+                        <select id="REMOTE_START_STOP_RESPONSE" class="form-control"
+                            style="max-width: 16ch; margin-right:1ch;">
+                            <option selected value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="REMOTE_START_DELAY">Remote start delay (seconds):</label>
+                        <br>
+                        <small>Simulate a delay before the charging session is started</small>
+                        <input class="form-control" style="width:161px;" type="number" min="0" value="0"
+                            id="REMOTE_START_DELAY" />
                     </div>
                 </form>
             </div>
@@ -156,7 +127,7 @@
                                     <label for="AVAILABILITY_CON0">Charge Point Availability:</label>
                                     <select id="AVAILABILITY_CON0" class="form-control"
                                         style="max-width: 16ch; margin-right:1ch;">
-                                        <option selected value="Operative">Operative</option>
+                                        <option value="Operative">Operative</option>
                                         <option disabled value="Inoperative">Inoperative</option>
                                     </select>
                                 </div>
@@ -169,21 +140,30 @@
                                             <option value="Unavailable">Unavailable</option>
                                             <option value="Faulted">Faulted</option>
                                         </select>
-                                        <button id="status0" type="button" class="btn btn-primary">Status
+                                        <button id="status0" type="button" class="btn btn-primary">Send Status
                                             Notification</button>
                                     </div>
                                 </div>
                                 <div class="form-group">
                                     <!-- inc with 1 meter value -->
-                                    <label for="metervalue">Meter value (kWh): </label>
+                                    <label for="metervalue">Current meter value (kWh): </label>
+                                    <p>
+                                        <small>Transactions always starts with 0 kWh.
+                                            Increment "Current meter value (kWh)" and press "Send Meter Values" to
+                                            update
+                                            Charge point management system (CPMS). Stop transaction will
+                                            have its end meter value be "Current meter value (kWh)".
+
+                                        </small>
+                                    </p>
                                     <div class="d-flex">
                                         <input type="text" id="metervalue" type="text" name="mv" value="0"
                                             style="max-width: 12ch">
                                         <div class="input-group-btn">
-                                            <button id="mvplus" class="btn btn-secondary"><span
-                                                    class="fa fa-plus"></span></button>
+                                            <button id="mvplus" class="btn btn-secondary"
+                                                style="margin-left: 1ch">+1</button>
                                             <button id="mv" type="button" class="btn btn-primary"
-                                                style="margin-left: 1ch">Send Meter Value</button>
+                                                style="margin-left: 1ch">Send Meter Values</button>
                                         </div>
 
                                     </div>
@@ -192,6 +172,35 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="tab-pane mt-4" id="tabcpparams">
+                <form id="cpparams">
+                    <div class="form-group">
+                        <label for="WSURL">OCPP Server</label>
+                        <input type="text" class="form-control" id="WSURL" name="WSURL" aria-describedby="urlHelp"
+                            placeholder="ws://localhost:8080/steve/websocket/CentralSystemService/">
+                        <small id="urlHelp" class="form-text text-muted">The base URL of the OCPP Server (without the
+                            ChargePoint ID)</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="CPID">ChargePoint ID</label>
+                        <input type="text" class="form-control" id="CPID" name="CPID" placeholder="CP001"
+                            style="max-width: 20ch">
+                    </div>
+                    <div class="form-group">
+                        <label for="OCPP">OCPP Version</label>
+                        <select id="OCPP" class="form-control" style="max-width: 20ch">
+                            <option value="">OCPP-1.6J</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="TAG">RFID Tag</label>
+                        <input type="text" class="form-control" id="TAG" name="TAG" aria-describedby="TAGHelp"
+                            placeholder="DEADBEEF" style="max-width: 20ch">
+                        <small id="TAGHelp" class="form-text text-muted">The ID of the simulated RFID tag</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </form>
             </div>
         </div>
         <div class="row mt-4 mr-1 ml-1 d-flex">
