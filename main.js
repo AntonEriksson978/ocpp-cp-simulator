@@ -837,7 +837,7 @@ class ChargePoint {
         setKey(key, newAvailability);
         if (newAvailability == AVAILABITY_INOPERATIVE) {
             this.setConnectorStatus(connectorId, CONN_UNAVAILABLE, true);
-        } else if (newAvailability == AVAILABITY_INOPERATIVE) {
+        } else if (newAvailability == AVAILABITY_OPERATIVE) {
             this.setConnectorStatus(connectorId, CONN_AVAILABLE, true);
         }
         if (this._availabilityChangeCb) {
@@ -845,7 +845,7 @@ class ChargePoint {
         }
         if (connectorId === 0) {
             this.setConnectorAvailability(1, newAvailability);
-            this.setConnectorAvailability(2, newAvailability);
+            // this.setConnectorAvailability(2, newAvailability);
         }
     }
 }
