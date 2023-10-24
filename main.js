@@ -136,7 +136,7 @@ class ChargePoint {
         this._websocket = null;
         this._heartbeat = null;
         this._statusChangeCb = null;
-        this._availabilityChangeCb = null;
+        this._availabilityChangeCb = function(connectorId, availability) {};
         this._loggingCb = null;
 
         // Either "Accepted" or "Rejected"
@@ -779,24 +779,24 @@ class ChargePoint {
 
     /**
     * Update status of given connector
-    * @param c connectorId
-    * @param new status for connector
-    * @param updateServer if true, also send a StatusNotification to server
+    * @param {number} connectorId
+    * @param {string} newStatus for connector
+    * @param {boolean} updateServer if true, also send a StatusNotification to server
     */
-    setConnectorStatus(c, newStatus, updateServer = false) {
-        var key = KEY_CONN_STATUS + c;
+    setConnectorStatus(connectorId, newStatus, updateServer = false) {
+        var key = KEY_CONN_STATUS + connectorId;
         setSessionKey(key, newStatus);
         if (updateServer) {
-            this.sendStatusNotification(c, newStatus);
+            this.sendStatusNotification(connectorId, newStatus);
         }
     }
 
     /**
      * Send a StatusNotification to the server with the new status of the specified connector
-     * @param {number} c The connector id (0 for CP, 1 for connector 1, etc...)
+     * @param {number} connectorId The connector id (0 for CP, 1 for connector 1, etc...)
      */
-    sendStatusNotification(c) {
-        var st = this.connectorStatus(c);
+    sendStatusNotification(connectorId) {
+        var st = this.connectorStatus(connectorId);
         this.setLastAction('StatusNotification');
         var id = generateId();
         var sn_req = JSON.stringify([
@@ -804,7 +804,7 @@ class ChargePoint {
             id,
             'StatusNotification',
             {
-                connectorId: c,
+                connectorId: connectorId,
                 status: st,
                 errorCode: 'NoError',
                 info: '',
@@ -813,39 +813,39 @@ class ChargePoint {
                 vendorErrorCode: '',
             },
         ]);
-        this.logMsg('Sending StatusNotification for connector ' + c + ': ' + st);
+        this.logMsg('Sending StatusNotification for connector ' + connectorId + ': ' + st);
         this.wsSendData(sn_req);
     }
 
     /**
     * Get availability for given connector
     * (availability is persistent thus stored in local storage instead of session storage)
-    * @param c connector id
-    * @return connector availability
+    * @param {number} connectorId 
+    * @returns {"Operative" | "Inoperative"} availability for connector
     */
-    availability(c = 0) {
-        var key = KEY_CONN_AVAILABILITY + c;
+    availability(connectorId = 0) {
+        var key = KEY_CONN_AVAILABILITY + connectorId;
         return getKey(key, AVAILABITY_OPERATIVE);
     }
 
     /**
     * Update the availability of given connector
     * (availability is set by remote server thus no "updateServer" flag as for connector status)
-    * @param c connectorId
-    * @param new availability for connector
+    * @param {number} connectorId 
+    * @param {"Operative" | "Inoperative"} newAvailability for connector
     */
-    setConnectorAvailability(c, newAvailability) {
-        var key = KEY_CONN_AVAILABILITY + c;
+    setConnectorAvailability(connectorId, newAvailability) {
+        var key = KEY_CONN_AVAILABILITY + connectorId;
         setKey(key, newAvailability);
         if (newAvailability == AVAILABITY_INOPERATIVE) {
-            this.setConnectorStatus(c, CONN_UNAVAILABLE, true);
+            this.setConnectorStatus(connectorId, CONN_UNAVAILABLE, true);
         } else if (newAvailability == AVAILABITY_INOPERATIVE) {
-            this.setConnectorStatus(c, CONN_AVAILABLE, true);
+            this.setConnectorStatus(connectorId, CONN_AVAILABLE, true);
         }
         if (this._availabilityChangeCb) {
-            this._availabilityChangeCb(c, newAvailability);
+            this._availabilityChangeCb(connectorId, newAvailability);
         }
-        if (Number(c) == 0) {
+        if (Number(connectorId) == 0) {
             this.setConnectorAvailability(1, newAvailability);
             this.setConnectorAvailability(2, newAvailability);
         }
@@ -964,6 +964,11 @@ function statusChangeCb(s, msg) {
     }
 }
 
+/**
+ * 
+ * @param {number} c ConnectorId
+ * @param {"Operative" | "Inoperative"} s 
+ */
 function availabilityChangeCb(c, s) {
     var dom_id = '#AVAILABILITY_CON' + c;
     $(dom_id).val(s);
