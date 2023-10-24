@@ -136,7 +136,7 @@ class ChargePoint {
         this._websocket = null;
         this._heartbeat = null;
         this._statusChangeCb = null;
-        this._availabilityChangeCb = function(connectorId, availability) {};
+        this._availabilityChangeCb = function (connectorId, availability) { };
         this._loggingCb = null;
 
         // Either "Accepted" or "Rejected"
@@ -252,7 +252,7 @@ class ChargePoint {
                 this.stopTransactionWithId(stop_id);
                 break;
 
-            case 'TriggerMessage':
+            case 'TriggerMessage': 
                 let requestedMessage = payload.requestedMessage;
                 // connectorId is optional thus must check if it is provided
                 if (payload['connectorId']) {
@@ -264,7 +264,6 @@ class ChargePoint {
                 this.wsSendData(respOk);
                 this.triggerMessage(requestedMessage, connectorId);
                 break;
-
             case 'ChangeAvailability':
                 const avail = payload.type;
                 connectorId = payload.connectorId;
@@ -284,9 +283,8 @@ class ChargePoint {
                 break;
 
             case 'GetConfiguration':
-                let requestedMessage = payload.requestedMessage;
                 this.logMsg(
-                    'Reception of a GetConfiguration request (' + requestedMessage + ')',
+                    'Reception of a GetConfiguration request (' + payload.requestedMessage + ')',
                 );
                 const configuration = [
                     3,
@@ -972,7 +970,7 @@ function statusChangeCb(s, msg) {
 function availabilityChangeCb(c, s) {
     let dom_id = '#AVAILABILITY_CON' + c;
     $(dom_id).val(s);
-    let dom_id = '#STATUS_CON' + c;
+    dom_id = '#STATUS_CON' + c;
     $(dom_id).val(_cp.connectorStatus(c));
 }
 
