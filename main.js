@@ -41,7 +41,7 @@ const AVAILABITY_INOPERATIVE = 'Inoperative';
 
 // Utility functions
 function formatDate(date) {
-    var day = String(date.getDate()),
+    let day = String(date.getDate()),
         monthIndex = String(date.getMonth() + 1),
         year = date.getFullYear(),
         h = date.getHours(),
@@ -71,8 +71,8 @@ function formatDate(date) {
 function generateId() {
     const possible =
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var id = '';
-    for (var i = 0; i < 36; i++) {
+    let id = '';
+    for (let i = 0; i < 36; i++) {
         id += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return id;
@@ -97,7 +97,7 @@ function setSessionKey(key, value) {
 * @return The key value
 */
 function getSessionKey(key, default_value = '') {
-    var v = sessionStorage.getItem(key);
+    let v = sessionStorage.getItem(key);
     if (!v) {
         v = default_value;
     }
@@ -119,7 +119,7 @@ function setKey(key, value) {
 * @return The key value
 */
 function getKey(key, default_value = '') {
-    var v = localStorage.getItem(key);
+    let v = localStorage.getItem(key);
     if (!v) {
         v = default_value;
     }
@@ -195,12 +195,12 @@ class ChargePoint {
     * Handle a command coming from the OCPP server
     */
     async handleCallRequest(id, request, payload) {
-        var respOk = JSON.stringify([3, id, { status: 'Accepted' }]);
-        var connectorId = 0;
+        let respOk = JSON.stringify([3, id, { status: 'Accepted' }]);
+        let connectorId = 0;
         switch (request) {
             case 'Reset':
                 // Reset type can be SOFT, HARD
-                var rstType = payload.type;
+                let rstType = payload.type;
                 this.logMsg('Reset Request: type=' + rstType);
                 this.wsSendData(respOk);
                 this.wsDisconnect();
@@ -235,7 +235,7 @@ class ChargePoint {
                 break;
 
             case 'RemoteStopTransaction':
-                var stop_id = payload.transactionId;
+                let stop_id = payload.transactionId;
                 this.logMsg(
                     'Reception of a RemoteStopTransaction request for transaction ' +
                     stop_id,
@@ -253,7 +253,7 @@ class ChargePoint {
                 break;
 
             case 'TriggerMessage':
-                var requestedMessage = payload.requestedMessage;
+                let requestedMessage = payload.requestedMessage;
                 // connectorId is optional thus must check if it is provided
                 if (payload['connectorId']) {
                     connectorId = payload['connectorId'];
@@ -266,7 +266,7 @@ class ChargePoint {
                 break;
 
             case 'ChangeAvailability':
-                var avail = payload.type;
+                const avail = payload.type;
                 connectorId = payload.connectorId;
                 this.logMsg(
                     'Reception of a ChangeAvailability request (connector ' +
@@ -284,7 +284,7 @@ class ChargePoint {
                 break;
 
             case 'GetConfiguration':
-                var requestedMessage = payload.requestedMessage;
+                let requestedMessage = payload.requestedMessage;
                 this.logMsg(
                     'Reception of a GetConfiguration request (' + requestedMessage + ')',
                 );
@@ -306,7 +306,7 @@ class ChargePoint {
                 break;
 
             default:
-                var error = JSON.stringify([4, id, 'NotImplemented']);
+                let error = JSON.stringify([4, id, 'NotImplemented']);
                 this.wsSendData(error);
                 break;
         }
@@ -317,12 +317,12 @@ class ChargePoint {
     * @param payload The payload part of the OCPP message
     */
     handleCallResult(payload) {
-        var la = this.getLastAction();
+        let la = this.getLastAction();
         switch (la) {
             case BOOT_NOTIFICATION:
                 if (payload.status == 'Accepted') {
                     this.logMsg('Connection accepted');
-                    var hb_interval = payload.interval;
+                    let hb_interval = payload.interval;
                     this.setHeartbeat(hb_interval);
                     this.setStatus(CP_CONNECTED);
                 } else {
@@ -339,7 +339,7 @@ class ChargePoint {
                 }
                 break;
             case START_TRANSACTION:
-                var transactionId = payload.transactionId;
+                let transactionId = payload.transactionId;
                 if (!transactionId) {
                     // doing this so StatusNotifications like "CHARGING" doesnt override transaction id
                     break;
@@ -380,8 +380,8 @@ class ChargePoint {
     authorize(tagId) {
         this.setLastAction('Authorize');
         this.logMsg('Requesting authorization for tag ' + tagId);
-        var id = generateId();
-        var Auth = JSON.stringify([
+        let id = generateId();
+        let Auth = JSON.stringify([
             2,
             id,
             'Authorize',
@@ -398,13 +398,13 @@ class ChargePoint {
     */
     startTransaction(tagId, connectorId = 1, reservationId = 0) {
         this.setStatus(CP_INTRANSACTION);
-        var id = generateId();
+        let id = generateId();
 
         // Always start on metervalue 0.
         $('#metervalue').val(0);
         _cp.setMeterValue(0);
 
-        var strtT = JSON.stringify([
+        let strtT = JSON.stringify([
             2,
             id,
             START_TRANSACTION,
@@ -435,7 +435,7 @@ class ChargePoint {
     * @param tagId the id of the RFID tag currently authorized on the CP
     */
     stopTransaction(tagId) {
-        var transactionId = parseInt(getSessionKey('TransactionId'));
+        let transactionId = parseInt(getSessionKey('TransactionId'));
         this.stopTransactionWithId(transactionId, tagId);
     }
 
@@ -447,7 +447,7 @@ class ChargePoint {
     stopTransactionWithId(transactionId, tagId = 'DEADBEEF') {
         this.setLastAction(STOP_TRANSACTION);
         this.setStatus(CP_AUTHORIZED);
-        var meterValue = this.meterValue();
+        let meterValue = this.meterValue();
         this.logMsg(
             'Stopping Transaction with id ' +
             transactionId +
@@ -455,8 +455,8 @@ class ChargePoint {
             meterValue +
             ')',
         );
-        var id = generateId();
-        var stopParams = {
+        let id = generateId();
+        let stopParams = {
             transactionId: transactionId,
             timestamp: luxon.DateTime.utc().toISO(),
             meterStop: meterValue,
@@ -493,7 +493,7 @@ class ChargePoint {
         if (!isEmpty(tagId)) {
             stopParams['idTag'] = tagId;
         }
-        var stpT = JSON.stringify([2, id, 'StopTransaction', stopParams]);
+        let stpT = JSON.stringify([2, id, 'StopTransaction', stopParams]);
         this.wsSendData(stpT);
         this.setConnectorStatus(1, CONN_FINISHING);
     }
@@ -533,8 +533,8 @@ class ChargePoint {
     sendBootNotification() {
         this.logMsg('Sending BootNotification');
         this.setLastAction(BOOT_NOTIFICATION);
-        var id = generateId();
-        var bn_req = JSON.stringify([
+        let id = generateId();
+        let bn_req = JSON.stringify([
             2,
             id,
             'BootNotification',
@@ -580,8 +580,8 @@ class ChargePoint {
     */
     sendHeartbeat() {
         this.setLastAction('Heartbeat');
-        var id = generateId();
-        var HB = JSON.stringify([2, id, 'Heartbeat', {}]);
+        let id = generateId();
+        let HB = JSON.stringify([2, id, 'Heartbeat', {}]);
         this.logMsg('Heartbeat');
         this.wsSendData(HB);
     }
@@ -623,7 +623,7 @@ class ChargePoint {
                 'ocpp1.6',
                 'ocpp1.5',
             ]);
-            var self = this;
+            let self = this;
 
             /**
                 * OnOpen Callback
@@ -659,15 +659,15 @@ class ChargePoint {
                 */
             this._websocket.onmessage = function (msg) {
                 console.log('RECEIVE: ' + msg.data);
-                var ddata = JSON.parse(msg.data);
+                let ddata = JSON.parse(msg.data);
 
                 // Decrypt Message Type
-                var msgType = ddata[0];
+                let msgType = ddata[0];
                 switch (msgType) {
                     case 2: // CALL
-                        var id = ddata[1];
-                        var request = ddata[2];
-                        var payload = null;
+                        let id = ddata[1];
+                        let request = ddata[2];
+                        let payload = null;
                         if (ddata.length > 3) {
                             payload = ddata[3];
                         }
@@ -732,11 +732,11 @@ class ChargePoint {
     * update the server with the internal meter value
     */
     sendMeterValue(connectorId = 0) {
-        var mvreq = {};
+        let mvreq = {};
         this.setLastAction('MeterValues');
-        var meter = getSessionKey(KEY_METER_VALUE);
-        var id = generateId();
-        var transactionId = parseInt(getSessionKey('TransactionId'));
+        let meter = getSessionKey(KEY_METER_VALUE);
+        let id = generateId();
+        let transactionId = parseInt(getSessionKey('TransactionId'));
         mvreq = JSON.stringify([
             2,
             id,
@@ -773,7 +773,7 @@ class ChargePoint {
     * @return connector status as string
     */
     connectorStatus(c) {
-        var key = KEY_CONN_STATUS + c;
+        let key = KEY_CONN_STATUS + c;
         return getSessionKey(key);
     }
 
@@ -784,7 +784,7 @@ class ChargePoint {
     * @param {boolean} updateServer if true, also send a StatusNotification to server
     */
     setConnectorStatus(connectorId, newStatus, updateServer = false) {
-        var key = KEY_CONN_STATUS + connectorId;
+        let key = KEY_CONN_STATUS + connectorId;
         setSessionKey(key, newStatus);
         if (updateServer) {
             this.sendStatusNotification(connectorId, newStatus);
@@ -796,10 +796,10 @@ class ChargePoint {
      * @param {number} connectorId The connector id (0 for CP, 1 for connector 1, etc...)
      */
     sendStatusNotification(connectorId) {
-        var st = this.connectorStatus(connectorId);
+        let st = this.connectorStatus(connectorId);
         this.setLastAction('StatusNotification');
-        var id = generateId();
-        var sn_req = JSON.stringify([
+        let id = generateId();
+        let sn_req = JSON.stringify([
             2,
             id,
             'StatusNotification',
@@ -824,7 +824,7 @@ class ChargePoint {
     * @returns {"Operative" | "Inoperative"} availability for connector
     */
     availability(connectorId = 0) {
-        var key = KEY_CONN_AVAILABILITY + connectorId;
+        let key = KEY_CONN_AVAILABILITY + connectorId;
         return getKey(key, AVAILABITY_OPERATIVE);
     }
 
@@ -835,7 +835,7 @@ class ChargePoint {
     * @param {"Operative" | "Inoperative"} newAvailability for connector
     */
     setConnectorAvailability(connectorId, newAvailability) {
-        var key = KEY_CONN_AVAILABILITY + connectorId;
+        let key = KEY_CONN_AVAILABILITY + connectorId;
         setKey(key, newAvailability);
         if (newAvailability == AVAILABITY_INOPERATIVE) {
             this.setConnectorStatus(connectorId, CONN_UNAVAILABLE, true);
@@ -845,7 +845,7 @@ class ChargePoint {
         if (this._availabilityChangeCb) {
             this._availabilityChangeCb(connectorId, newAvailability);
         }
-        if (Number(connectorId) == 0) {
+        if (connectorId === 0) {
             this.setConnectorAvailability(1, newAvailability);
             this.setConnectorAvailability(2, newAvailability);
         }
@@ -860,12 +860,12 @@ const CPID = 'CPID';
 const TAGID = 'TAG';
 
 // the charge point
-var _cp = new ChargePoint();
+let _cp = new ChargePoint();
 
 // Log message to the JS Console and into the Log TextArea
 function logMsg(msg) {
     console.log(msg);
-    var html_console = $('#console');
+    let html_console = $('#console');
     html_console.append('&#10;' + msg);
     html_console.scrollTop(html_console.get(0).scrollHeight);
 }
@@ -879,7 +879,7 @@ function setKey(key, value) {
 }
 
 function keyDefaultValue(key) {
-    var v = '';
+    let v = '';
     switch (key) {
         case WSURL:
             v = 'ws:*localhost:8080/steve/websocket/CentralSystemService/';
@@ -895,7 +895,7 @@ function keyDefaultValue(key) {
 }
 
 function getKey(key) {
-    var v = localStorage.getItem(key);
+    let v = localStorage.getItem(key);
     if (isEmpty(v)) {
         v = keyDefaultValue(key);
     }
@@ -970,9 +970,9 @@ function statusChangeCb(s, msg) {
  * @param {"Operative" | "Inoperative"} s 
  */
 function availabilityChangeCb(c, s) {
-    var dom_id = '#AVAILABILITY_CON' + c;
+    let dom_id = '#AVAILABILITY_CON' + c;
     $(dom_id).val(s);
-    var dom_id = '#STATUS_CON' + c;
+    let dom_id = '#STATUS_CON' + c;
     $(dom_id).val(_cp.connectorStatus(c));
 }
 
@@ -999,7 +999,7 @@ $(document).ready(function () {
     $('#cpparams').submit(function (e) {
         const formData = new FormData(e.target);
         console.log('Hellow');
-        for (var pair of formData.entries()) {
+        for (let pair of formData.entries()) {
             setKey(pair[0], pair[1]);
         }
     });
@@ -1068,8 +1068,8 @@ $(document).ready(function () {
     $('#data_transfer').click(function () {
         /*
             setLastAction("DataTransfer");
-            var id=generateId();
-            var DT = JSON.stringify([2,id, "DataTransfer", {
+            let id=generateId();
+            let DT = JSON.stringify([2,id, "DataTransfer", {
                 "vendorId": "rus.avt.cp",
                 "messageId": "GetChargeInstruction",
                 "data": ""
